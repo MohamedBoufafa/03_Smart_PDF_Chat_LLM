@@ -99,12 +99,18 @@ class VectorStore:
     
     def __init__(self):
         self.client = chromadb.Client(Settings(anonymized_telemetry=False))
+        self.collection = None
+        self._ensure_collection()
+    
+    def _ensure_collection(self):
+        """Ensure collection exists before operations"""
         try:
             self.collection = self.client.get_collection('pdfs')
         except:
             self.collection = self.client.create_collection('pdfs', metadata={"hnsw:space": "cosine"})
     
     def add_documents(self, chunks: List[Dict], embeddings: np.ndarray):
+        self._ensure_collection()  # Ensure collection exists
         self.collection.add(
             ids=[str(uuid.uuid4()) for _ in chunks],
             embeddings=embeddings.tolist(),
@@ -113,6 +119,7 @@ class VectorStore:
         )
     
     def query(self, emb: np.ndarray, top_k=3):
+        self._ensure_collection()  # Ensure collection exists
         results = self.collection.query(query_embeddings=[emb.tolist()], n_results=top_k)
         return {
             'documents': results['documents'][0] if results['documents'] else [],
@@ -123,9 +130,10 @@ class VectorStore:
         """Clear all documents"""
         try:
             self.client.delete_collection('pdfs')
-            self.collection = self.client.create_collection('pdfs', metadata={"hnsw:space": "cosine"})
         except:
             pass
+        finally:
+            self._ensure_collection()  # Recreate collection
 
 
 class RAGSystem:
@@ -205,7 +213,7 @@ def load_models():
         model = AutoModelForSeq2SeqLM.from_pretrained(
             model_name,
             device_map="auto",
-            torch_dtype=torch.float16
+            dtype=torch.float16 if torch.cuda.is_available() else torch.float32
         )
         
         llm_pipe = pipeline(
