@@ -222,15 +222,15 @@ def load_models():
             "text2text-generation",
             model=model,
             tokenizer=tokenizer,
-            max_new_tokens=250,  # Increased for complete sentences
+            max_new_tokens=150,  # Balanced for speed and quality
             do_sample=False,
-            num_beams=2,
-            repetition_penalty=1.2  # Avoid repeating text
+            num_beams=1,  # Back to 1 for speed
+            early_stopping=True
         )
         
         def generate(prompt, context):
-            # Better prompt engineering for flan-t5-base
-            full_prompt = f"Answer this question in a complete sentence based on the context.\n\nQuestion: {prompt}\n\nContext: {context[:1000]}\n\nDetailed Answer:"
+            # Optimized prompt for flan-t5-base
+            full_prompt = f"Context: {context[:800]}\n\nQuestion: {prompt}\nAnswer:"
             result = llm_pipe(full_prompt)[0]['generated_text']
             return result.strip()
         
