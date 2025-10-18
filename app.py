@@ -222,13 +222,15 @@ def load_models():
             "text2text-generation",
             model=model,
             tokenizer=tokenizer,
-            max_new_tokens=200,  # Increased from 80 for better answers
+            max_new_tokens=250,  # Increased for complete sentences
             do_sample=False,
-            num_beams=2  # Increased from 1 for better quality
+            num_beams=2,
+            repetition_penalty=1.2  # Avoid repeating text
         )
         
         def generate(prompt, context):
-            full_prompt = f"Question: {prompt}\n\nContext: {context[:800]}\n\nAnswer:"
+            # Better prompt engineering for flan-t5-base
+            full_prompt = f"Answer this question in a complete sentence based on the context.\n\nQuestion: {prompt}\n\nContext: {context[:1000]}\n\nDetailed Answer:"
             result = llm_pipe(full_prompt)[0]['generated_text']
             return result.strip()
         
@@ -265,7 +267,7 @@ def main():
         
         # Model info
         device_info = "GPU" if torch.cuda.is_available() else "CPU"
-        st.info(f"**Device:** {device_info}\n**Model:** Flan-T5 Large")
+        st.info(f"**Device:** {device_info}\n**Model:** Flan-T5 Base")
         
         st.markdown("---")
         
