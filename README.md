@@ -136,27 +136,6 @@ TOP_K = 3             # Line 37 - number of sources to retrieve
 
 ---
 
-## Deployment
-
-### Streamlit Cloud (Free)
-
-1. Push to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect repo
-4. Deploy
-
-Takes 5-7 minutes first time.
-
-### Hugging Face Spaces
-
-For GPU access ($1/month):
-1. Create Space at [huggingface.co](https://huggingface.co)
-2. Select Streamlit SDK
-3. Upload files
-4. Add T4 GPU for 1-3s responses with flan-t5-large
-
----
-
 ## Technical Details
 
 **RAG Pipeline:**
@@ -179,29 +158,12 @@ For GPU access ($1/month):
 
 ---
 
-## Future Improvements
-
-- [ ] Support Word, Excel, text files
-- [ ] Conversation memory for follow-up questions
-- [ ] Document summarization
-- [ ] Multi-language support
-- [ ] REST API endpoint
-- [ ] User authentication
-- [ ] Dark mode
-
----
-
 ## Contributing
 
 Pull requests welcome. This is a learning project but open to improvements.
 
 ---
 
-## License
-
-MIT License - feel free to use and modify.
-
----
 
 ## Author
 
