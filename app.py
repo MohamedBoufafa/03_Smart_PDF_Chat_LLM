@@ -146,12 +146,14 @@ class RAGSystem:
         self.vec_store = vec_store
         self.generate = gen_fn
     
-    def ingest_pdf(self, pdf_path: str) -> Dict:
+    def ingest_pdf(self, pdf_path: str, original_filename: str = None) -> Dict:
         pdf_data = self.pdf_proc.extract_text(pdf_path)
         if not pdf_data:
             return {'error': 'Failed to extract text'}
         
-        chunks = self.chunker.chunk_with_metadata(pdf_data['text_by_page'], pdf_data['file_name'])
+        # Use original filename if provided, otherwise use extracted filename
+        filename = original_filename if original_filename else pdf_data['file_name']
+        chunks = self.chunker.chunk_with_metadata(pdf_data['text_by_page'], filename)
         
         embeddings = self.emb_model.encode(
             [c['text'] for c in chunks],
@@ -163,7 +165,7 @@ class RAGSystem:
         self.vec_store.add_documents(chunks, embeddings)
         
         return {
-            'file_name': pdf_data['file_name'],
+            'file_name': filename,
             'num_pages': pdf_data['num_pages'],
             'num_chunks': len(chunks)
         }
@@ -220,13 +222,13 @@ def load_models():
             "text2text-generation",
             model=model,
             tokenizer=tokenizer,
-            max_new_tokens=80,
+            max_new_tokens=200,  # Increased from 80 for better answers
             do_sample=False,
-            num_beams=1
+            num_beams=2  # Increased from 1 for better quality
         )
         
         def generate(prompt, context):
-            full_prompt = f"answer: {prompt}\n\ncontext: {context[:600]}"
+            full_prompt = f"Question: {prompt}\n\nContext: {context[:800]}\n\nAnswer:"
             result = llm_pipe(full_prompt)[0]['generated_text']
             return result.strip()
         
@@ -366,8 +368,8 @@ def process_pdfs(uploaded_files):
             tmp_path = tmp_file.name
         
         try:
-            # Ingest
-            result = st.session_state.rag.ingest_pdf(tmp_path)
+            # Ingest (pass original filename)
+            result = st.session_state.rag.ingest_pdf(tmp_path, original_filename=uploaded_file.name)
             
             if 'error' not in result:
                 st.session_state.uploaded_files.append({
